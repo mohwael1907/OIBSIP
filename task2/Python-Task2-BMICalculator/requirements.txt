@@ -1,0 +1,12 @@
+# ==============================================================================
+# Advanced BMI Calculator & Analytics Dashboard - Requirements
+# ==============================================================================
+# Note: Tkinter, SQLite3, CSV, OS, and DateTime are built into standard Python.
+
+# Core Dependencies
+matplotlib>=3.5.0,<=3.9.2
+
+# Optional / Development Dependencies (Uncomment if needed for extended analysis)
+# pandas>=1.4.0
+# pillow>=9.0.0
+
