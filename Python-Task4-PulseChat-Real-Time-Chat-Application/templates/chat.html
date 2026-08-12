@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}PulseChat - Real-Time Dashboard{% endblock %}
+
+{% block content %}
+<div class="chat-app-container" id="chat-app-container">
+
+    <!-- LEFT SIDEBAR: User profile, room list, room creation -->
+    <aside class="sidebar glass-panel">
+        <div class="sidebar-header">
+            <div class="brand-title">
+                <i class="fa-solid fa-bolt-lightning brand-icon"></i>
+                <span class="brand-name">PulseChat</span>
+            </div>
+            <div class="user-badge-mini" title="Logged in as {{ username }}">
+                <div class="avatar-circle">{{ username[0]|upper }}</div>
+            </div>
+        </div>
+
+        <div class="user-profile-bar">
+            <div class="profile-info">
+                <span class="status-indicator online"></span>
+                <span class="user-name">{{ username }}</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn-icon" title="Log Out">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        </div>
+
+        <!-- Room Search Input -->
+        <div class="sidebar-search">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="room-search-input" placeholder="Search or filter rooms...">
+        </div>
+
+        <!-- Rooms Section Header -->
+        <div class="rooms-header-row">
+            <h4><i class="fa-solid fa-hashtag"></i> Chat Rooms</h4>
+            <button id="btn-open-create-room" class="btn-small btn-accent" title="Create Room">
+                <i class="fa-solid fa-plus"></i> New
+            </button>
+        </div>
+
+        <!-- Rooms List -->
+        <div class="rooms-list-scroll" id="rooms-list">
+            <!-- Dynamic room items rendered by JS -->
+            <div class="rooms-loading">
+                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading rooms...
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CHAT FEED AREA -->
+    <main class="main-chat-area">
+        <!-- Chat Header -->
+        <header class="chat-header glass-panel">
+            <div class="room-title-section">
+                <div class="room-icon-box">#</div>
+                <div class="room-info">
+                    <h3 id="current-room-name">Select a Room</h3>
+                    <p id="current-room-desc">Join a room to start messaging</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <!-- Desktop Notifications Toggle -->
+                <button id="btn-toggle-notif" class="btn-icon" title="Enable Desktop Notifications">
+                    <i class="fa-solid fa-bell-slash"></i>
+                </button>
+                <!-- Sound Chime Toggle -->
+                <button id="btn-toggle-sound" class="btn-icon active" title="Audio Chime (On)">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <!-- Toggle Right Sidebar / Online Users -->
+                <button id="btn-toggle-users" class="btn-icon" title="Toggle Members List">
+                    <i class="fa-solid fa-users"></i>
+                    <span id="header-user-count" class="badge">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Message List Container -->
+        <div class="messages-container" id="messages-container">
+            <div class="empty-state" id="empty-state">
+                <i class="fa-solid fa-comments"></i>
+                <h3>Welcome to PulseChat</h3>
+                <p>Select a room from the sidebar to view message history and chat in real-time.</p>
+            </div>
+            <div class="message-feed" id="message-feed"></div>
+        </div>
+
+        <!-- Typing Status Indicator -->
+        <div class="typing-indicator" id="typing-indicator">
+            <span class="typing-dots">
+                <span></span><span></span><span></span>
+            </span>
+            <span id="typing-text">Someone is typing...</span>
+        </div>
+
+        <!-- Composer / Input Bar -->
+        <div class="composer-container glass-panel">
+            <!-- Emoji Picker Popover -->
+            <div class="emoji-picker-popover hidden" id="emoji-picker">
+                <div class="emoji-picker-header">
+                    <span><i class="fa-solid fa-face-smile"></i> Express Yourself</span>
+                    <button id="emoji-picker-close" class="btn-icon-sm"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="emoji-grid" id="emoji-grid">
+                    <!-- Dynamic Emojis populated by JS -->
+                </div>
+            </div>
+
+            <div class="composer-form">
+                <button id="btn-emoji-toggle" class="btn-icon composer-tool" title="Emoji Shortcodes & Picker">
+                    <i class="fa-solid fa-face-smile"></i>
+                </button>
+                <input type="text" id="message-input" placeholder="Type a message... (Use shortcodes like :smile: or :fire:)" autocomplete="off">
+                <button id="btn-send-message" class="btn btn-primary btn-send">
+                    <span>Send</span>
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR: Online Users List -->
+    <aside class="right-panel glass-panel hidden" id="right-panel">
+        <div class="panel-header">
+            <h4><i class="fa-solid fa-users"></i> Online Members</h4>
+            <button id="btn-close-right-panel" class="btn-icon-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="online-users-list" id="online-users-list">
+            <!-- Rendered by JS -->
+        </div>
+    </aside>
+
+</div>
+
+<!-- MODAL: CREATE ROOM -->
+<div class="modal-backdrop hidden" id="create-room-modal">
+    <div class="modal-card glass-panel">
+        <div class="modal-header">
+            <h3><i class="fa-solid fa-folder-plus"></i> Create New Room</h3>
+            <button id="btn-close-modal" class="btn-icon-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="create-room-form">
+            <div class="form-group">
+                <label for="new-room-name">Room Name</label>
+                <input type="text" id="new-room-name" placeholder="e.g. Design, Python-Dev, Gaming" required minlength="2" maxlength="30">
+            </div>
+            <div class="form-group">
+                <label for="new-room-desc">Description / Topic</label>
+                <input type="text" id="new-room-desc" placeholder="What's this room about?" maxlength="100">
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btn-cancel-modal" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Room</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.CURRENT_USERNAME = "{{ username }}";
+</script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
